@@ -9,7 +9,7 @@ class Trie:
         for word in words:
             self.insert(word)
 
-    def insert(self, word: str, index=0) -> None:
+    def insert(self, word: str) -> None:
         cursor = self
         for c in word:
             cursor = cursor.children[c]
