@@ -1,30 +1,42 @@
 from typing import List
-from collections import defaultdict
-from functools import lru_cache
+import collections
 
 
 class Solution:
+    ## TC: O(n)
+    ## SC: O(n)
     def sumOfDistancesInTree(self, n: int, edges: List[List[int]]) -> List[int]:
-        adjacency_map = defaultdict(list)
+        adj_list = collections.defaultdict(list)
         for u, v in edges:
-            adjacency_map[u].append(v)
-            adjacency_map[v].append(u)
+            adj_list[u].append(v)
+            adj_list[v].append(u)
 
-        @lru_cache(None)
-        def get_size(u, v):
-            return 1 + sum(get_size(v, child) for child in adjacency_map[v] if child != u)
+        size = [0] * n  # rooted
 
-        @lru_cache(None)
-        def get_dist_sum(u, v):
-            return 1 + sum(get_dist_sum(v, child) + get_size(v, child) for child in adjacency_map[v] if child != u)
+        def create_size(parent, v):
+            size[v] = 1 + sum(create_size(v, w) for w in adj_list[v] if w != parent)
+            return size[v]
 
-        return [sum(get_dist_sum(v, child) for child in adjacency_map[v]) for v in range(n)]
+        def get_dist(parent, v):
+            return sum(size[w] + get_dist(v, w) for w in adj_list[v] if w != parent)
 
+        udist = [0] * n  # unrooted
 
-## TC: O(n)
-## SC: O(n)
+        def create_udist(parent, v):
+            for w in adj_list[v]:
+                if w != parent:
+                    udist[w] = udist[v] - size[w] + (n - size[w])
+                    create_udist(v, w)
+
+        create_size(-1, 0)
+        udist[0] = get_dist(-1, 0)
+        create_udist(-1, 0)
+
+        return udist
+
 
 s = Solution()
-print(s.sumOfDistancesInTree(6, [[0,1],[0,2],[2,3],[2,4],[2,5]]))
+print(s.sumOfDistancesInTree(6, [[0, 1], [0, 2], [2, 3], [2, 4], [2, 5]]))
 print(s.sumOfDistancesInTree(1, []))
-print(s.sumOfDistancesInTree(2, [[1,0]]))
+print(s.sumOfDistancesInTree(2, [[1, 0]]))
+print(s.sumOfDistancesInTree(30000, [[0, i] for i in range(1, 30000)]))
